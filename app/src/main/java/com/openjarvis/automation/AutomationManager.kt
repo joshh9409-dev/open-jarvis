@@ -61,7 +61,7 @@ class AutomationManager(private val context: Context) {
                 .setInitialDelay(calculateWeeklyDelay(schedule.dayOfWeek, schedule.hour, schedule.minute), TimeUnit.MILLISECONDS)
                 .addTag(automation.id).build()
             is AutomationSchedule.Interval -> PeriodicWorkRequestBuilder<AutomationWorker>(
-                schedule.intervalMs.coerceAtLeast(15 * 60 * 1000L), TimeUnit.MILLISECONDS, 1, TimeUnit.MINUTES
+                schedule.intervalMs.coerceAtLeast(15 * 60 * 1000L), TimeUnit.MILLISECONDS
             ).setConstraints(constraints).setInputData(inputData).addTag(automation.id).build()
             is AutomationSchedule.Once -> {
                 val delay = schedule.atMs - System.currentTimeMillis()
