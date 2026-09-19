@@ -7,10 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.pointerInput
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -588,7 +586,7 @@ private fun InputRowWithVoice(
 
 @Composable
 private fun DividerLine() {
-    Divider(
+    HorizontalDivider(
         modifier = Modifier.fillMaxWidth(),
         thickness = 1.dp,
         color = VoidColor.Void600
