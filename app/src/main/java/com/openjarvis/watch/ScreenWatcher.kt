@@ -221,7 +221,7 @@ data class WatchRule(
     val trigger: WatchTrigger,
     val action: WatchAction,
     val cooldownMs: Long = 30_000,
-    val lastTriggered: Long = 0
+    var lastTriggered: Long = 0
 )
 
 sealed class WatchTrigger {
