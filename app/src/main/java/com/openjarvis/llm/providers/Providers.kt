@@ -305,7 +305,7 @@ class OllamaProvider(
 }
 
 class CustomProvider(
-    private val baseUrl: String,
+    override val baseUrl: String,
     private val apiKey: String = "",
     private val model: String = "gpt-4o-mini"
 ) : LLMProvider {
