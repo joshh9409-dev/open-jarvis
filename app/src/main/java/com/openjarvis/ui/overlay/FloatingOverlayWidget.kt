@@ -141,18 +141,15 @@ private fun CollapsedPill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var glowAlpha by remember { mutableFloatStateOf(0.15f) }
-
-    LaunchedEffect(Unit) {
-        infiniteTransition.animateFloat(
-            initialValue = 0.15f,
-            targetValue = 0.45f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(3000, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            )
-        ) { glowAlpha = this }
-    }
+    val glowAlpha by rememberInfiniteTransition(label = "glow").animateFloat(
+        initialValue = 0.15f,
+        targetValue = 0.45f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowAlpha"
+    )
 
     val statusScale by rememberInfiniteTransition(label = "status").animateFloat(
         initialValue = 0.75f,
@@ -586,7 +583,7 @@ private fun InputRowWithVoice(
 
 @Composable
 private fun DividerLine() {
-    HorizontalDivider(
+    Divider(
         modifier = Modifier.fillMaxWidth(),
         thickness = 1.dp,
         color = VoidColor.Void600
