@@ -1,9 +1,15 @@
 package com.openjarvis.accessibility
 
+import android.content.Context
 import android.view.accessibility.AccessibilityNodeInfo
 import java.util.ArrayDeque
 
-class ScreenReader(private val service: JarvisAccessibilityService) {
+class ScreenReader(private val fixedService: JarvisAccessibilityService? = null) {
+    constructor(context: Context) : this(null)
+
+    private val service: JarvisAccessibilityService
+        get() = fixedService ?: JarvisAccessibilityService.instance
+            ?: throw IllegalStateException("Accessibility service is not connected")
 
     fun extractAllText(): String {
         val rootNode = service.rootInActiveWindow ?: return ""
