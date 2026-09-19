@@ -39,7 +39,7 @@ class UniversalAdapter(private val context: Context) {
                 LlamaProvider(mm.getModelPath(tier), tier.displayName)
             }
             "Custom" -> CustomProvider(baseUrl ?: "", apiKey ?: "", model ?: "gpt-4o-mini")
-            else -> CustomProvider(baseUrl, apiKey, model)
+            else -> CustomProvider(baseUrl ?: "", apiKey ?: "", model ?: "gpt-4o-mini")
         }
     }
     
@@ -82,7 +82,7 @@ class UniversalAdapter(private val context: Context) {
         }
         
         fun isLocalModelLoaded(): Boolean {
-            return modelManager?.state?.value is ModelManager.ModelState.ModelLoaded
+            return modelManager?.state?.value is ModelManager.ModelState.Loaded
         }
         
         suspend fun loadLocalModel(tier: ModelManager.ModelTier): Result<Unit> {
