@@ -583,13 +583,13 @@ private fun InputRowWithVoice(
 
 @Composable
 private fun DividerLine() {
-    Divider(
-        modifier = Modifier.fillMaxWidth(),
-        thickness = 1.dp,
-        color = VoidColor.Void600
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(VoidColor.Void600)
     )
 }
-
 @Composable
 private fun TaskLogWidget(tasks: List<TaskNode>) {
     Column(modifier = Modifier.heightIn(max = 80.dp)) {
