@@ -11,7 +11,8 @@ class AIAppInteractor(private val context: Context) {
     private val workingMemory = TaskWorkingMemory()
     
     fun openAIApp(meta: AIAppMeta): Boolean {
-        return JarvisAccessibilityService.instance?.openAppByPackage(meta.packageName) ?: false
+        JarvisAccessibilityService.instance?.openAppByPackage(meta.packageName)
+        return true
     }
     
     fun clearContext() {
