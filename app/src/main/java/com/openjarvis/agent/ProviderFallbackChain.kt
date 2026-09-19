@@ -5,6 +5,7 @@ import com.openjarvis.graphify.GraphifyRepository
 import com.openjarvis.llm.LLMProvider
 import com.openjarvis.llm.UniversalAdapter
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.json.JSONException
 
 class ProviderFallbackChain(private val context: Context) {
     
