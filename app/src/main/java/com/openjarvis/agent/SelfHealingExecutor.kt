@@ -57,11 +57,11 @@ class SelfHealingExecutor(private val context: Context) {
             
             when (action.action) {
                 Action.TAP -> {
-                    val tapped = service?.tapByText(action.text ?: "")
+                    val tapped = service?.tapByText(action.text ?: "") ?: false
                     ActionResult.Success(if (tapped) "tapped ${action.text}" else "tap failed")
                 }
                 Action.TYPE -> {
-                    val typed = service?.typeText(action.value ?: "")
+                    val typed = service?.typeText(action.value ?: "") ?: false
                     ActionResult.Success(if (typed) "typed ${action.value}" else "type failed")
                 }
                 Action.OPEN_APP -> {
