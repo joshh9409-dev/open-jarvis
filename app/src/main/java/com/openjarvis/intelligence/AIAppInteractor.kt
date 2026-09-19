@@ -17,7 +17,6 @@ class AIAppInteractor(private val context: Context) {
     fun clearContext() {
         try {
             JarvisAccessibilityService.instance?.pressBack()
-            delay(300)
         } catch (e: Exception) { }
     }
     
