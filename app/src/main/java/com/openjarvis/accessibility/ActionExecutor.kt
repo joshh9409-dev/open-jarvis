@@ -9,7 +9,7 @@ class ActionExecutor(private val service: JarvisAccessibilityService) {
 
     private val screenReader = ScreenReader(service)
 
-    suspend fun execute(actions: List<Action>): ExecutionResult = withContext(Dispatchers.IO) {
+    suspend fun execute(actions: List<Action>): ExecutionResult = withContext(LocalDispatchers.IO) {
         val results = CopyOnWriteArrayList<ActionResult>()
         
         for (action in actions) {
@@ -105,6 +105,6 @@ class ActionExecutor(private val service: JarvisAccessibilityService) {
     )
 }
 
-private object Dispatchers {
+private object LocalDispatchers {
     val IO = kotlinx.coroutines.Dispatchers.IO
 }
