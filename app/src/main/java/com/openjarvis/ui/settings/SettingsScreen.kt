@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.draw.graphicsLayer
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -512,6 +512,8 @@ fun FloatingLabelTextField(
     visible: Boolean = true,
     onTogglePassword: (() -> Unit)? = null
 ) {
+    val density = LocalDensity.current
+
     val labelOffset by animateFloatAsState(
         targetValue = if (isFocused || value.isNotEmpty()) -20f else 0f,
         animationSpec = spring(stiffness = 300f, dampingRatio = 0.75f),
@@ -550,7 +552,7 @@ fun FloatingLabelTextField(
                     color = VoidColor.TextSecondary
                 ),
                 modifier = Modifier.graphicsLayer {
-                    translationY = with(LocalDensity.current) { labelOffset.dp.toPx() }
+                    translationY = with(density) { labelOffset.dp.toPx() }
                     scaleX = labelScale
                     scaleY = labelScale
                 }
