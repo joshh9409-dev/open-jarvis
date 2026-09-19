@@ -148,4 +148,15 @@ class JarvisNotificationListener : NotificationListenerService() {
         val isMessaging: Boolean,
         val sender: String?
     )
-    
+
+    private val messagingApps = setOf(
+        "com.whatsapp",
+        "com.google.android.apps.messaging",
+        "com.samsung.android.messaging",
+        "com.instagram.android",
+        "com.facebook.orca",
+        "org.telegram.messenger",
+        "com.slack",
+        "com.discord"
+    )
+}
