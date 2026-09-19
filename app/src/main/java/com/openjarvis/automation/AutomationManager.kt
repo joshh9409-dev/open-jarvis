@@ -70,7 +70,7 @@ class AutomationManager(private val context: Context) {
                     .setInitialDelay(delay, TimeUnit.MILLISECONDS).addTag(automation.id).build()
             }
         }
-        WorkManager.getInstance(context).enqueueUniqueWork(automation.id, ExistingWorkPolicy.REPLACE, request)
+        WorkManager.getInstance(context).enqueue(request)
     }
 
     private fun cancelAutomation(id: String) {
