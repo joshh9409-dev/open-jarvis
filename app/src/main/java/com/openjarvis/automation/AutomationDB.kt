@@ -24,22 +24,22 @@ data class AutomationEntity(
 @Dao
 interface AutomationDao {
     @Query("SELECT * FROM automations ORDER BY name")
-    suspend fun getAll(): List<AutomationManager.Automation>
+    suspend fun getAll(): List<AutomationEntity>
     
     @Query("SELECT * FROM automations WHERE id = :id")
-    suspend fun getById(id: String): AutomationManager.Automation?
+    suspend fun getById(id: String): AutomationEntity?
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(automation: AutomationManager.Automation)
+    suspend fun insert(automation: AutomationEntity)
     
     @Update
-    suspend fun update(automation: AutomationManager.Automation)
+    suspend fun update(automation: AutomationEntity)
     
     @Query("DELETE FROM automations WHERE id = :id")
     suspend fun delete(id: String)
 }
 
-@Database(entities = [AutomationEntity::class], version = 1)
+@Database(entities = [AutomationEntity::class], version = 1, exportSchema = false)
 abstract class AutomationDB : RoomDatabase() {
     abstract fun automationDao(): AutomationDao
     
