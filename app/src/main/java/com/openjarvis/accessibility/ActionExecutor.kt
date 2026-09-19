@@ -7,7 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class ActionExecutor(private val service: JarvisAccessibilityService) {
 
-    private val screenReader = ScreenReader(service)
+    private val screenReader = ScreenReader(fixedService = service)
 
     suspend fun execute(actions: List<Action>): ExecutionResult = withContext(LocalDispatchers.IO) {
         val results = CopyOnWriteArrayList<ActionResult>()
