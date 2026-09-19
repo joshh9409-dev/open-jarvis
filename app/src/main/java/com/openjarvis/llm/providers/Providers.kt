@@ -236,7 +236,7 @@ class OpenAIProvider(
 }
 
 class OllamaProvider(
-    private val baseUrl: String,
+    override val baseUrl: String,
     private val model: String = "llama3"
 ) : LLMProvider {
     
