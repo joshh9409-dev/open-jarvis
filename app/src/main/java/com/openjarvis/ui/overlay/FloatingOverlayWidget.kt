@@ -89,33 +89,7 @@ fun FloatingOverlayWidget(
 
     AnimatedContent(
         targetState = isExpanded,
-        transitionSpec = {
-            if (targetState) {
-                (expandHorizontally(
-                    animationSpec = spring(
-                        stiffness = Spring.StiffnessMedium,
-                        dampingRatio = 0.8f
-                    )
-                ) + expandVertically(
-                    animationSpec = spring(
-                        stiffness = 260f,
-                        dampingRatio = 0.8f
-                    )
-                ) + fadeIn(animationSpec = tween(150, delayMillis = 240)))
-            } else {
-                (shrinkHorizontally(
-                    animationSpec = spring(
-                        stiffness = Spring.StiffnessMedium,
-                        dampingRatio = 0.8f
-                    )
-                ) + shrinkVertically(
-                    animationSpec = spring(
-                        stiffness = Spring.StiffnessMedium,
-                        dampingRatio = 0.8f
-                    )
-                ) + fadeOut(animationSpec = tween(100)))
-            }
-        },
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
         label = "overlay_expand"
     ) { expanded ->
         if (expanded) {
