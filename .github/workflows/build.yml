@@ -14,12 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Unpack fixed project
-        run: |
-          unzip -q open-jarvis-fixed.zip
-          echo "Fixed project unpacked"
-          ls -la open-jarvis-main
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -41,11 +35,10 @@ jobs:
           gradle-version: '8.2'
 
       - name: Build APK
-        working-directory: open-jarvis-main
         run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Open-Jarvis-debug
-          path: open-jarvis-main/app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk
