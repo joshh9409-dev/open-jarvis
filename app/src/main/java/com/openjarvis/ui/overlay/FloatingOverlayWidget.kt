@@ -602,7 +602,7 @@ private fun InputRowWithVoice(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowUp,
+                    imageVector = Icons.Filled.KeyboardArrowUp,
                     contentDescription = "Send",
                     tint = Color.White,
                     modifier = Modifier.size(16.dp)
