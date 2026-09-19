@@ -27,18 +27,18 @@ class UniversalAdapter(private val context: Context) {
         val model = prefs.getString("provider_model", "")
         
         return when (name) {
-            "Groq" -> GroqProvider(apiKey, model)
-            "Google Gemini", "gemini" -> GeminiProvider(apiKey, model)
-            "OpenRouter" -> OpenRouterProvider(apiKey, model)
-            "Anthropic Claude" -> AnthropicProvider(apiKey, model)
-            "OpenAI" -> OpenAIProvider(apiKey, model)
-            "Ollama (Local)" -> OllamaProvider(baseUrl, model)
+            "Groq" -> GroqProvider(apiKey ?: "", model ?: "llama-3.1-70b-versatile")
+            "Google Gemini", "gemini" -> GeminiProvider(apiKey ?: "", model ?: "gemini-1.5-flash")
+            "OpenRouter" -> OpenRouterProvider(apiKey ?: "", model ?: "meta-llama/llama-3-8b-instruct:free")
+            "Anthropic Claude" -> AnthropicProvider(apiKey ?: "", model ?: "claude-haiku-4-20250514")
+            "OpenAI" -> OpenAIProvider(apiKey ?: "", model ?: "gpt-4o-mini")
+            "Ollama (Local)" -> OllamaProvider(baseUrl ?: "", model ?: "llama3")
             "Local (LlamaCpp)" -> {
                 val mm = getModelManager(context)
                 val tier = mm.getDownloadedTier() ?: ModelManager.ModelTier.MINIMUM
                 LlamaProvider(mm.getModelPath(tier), tier.displayName)
             }
-            "Custom" -> CustomProvider(baseUrl, apiKey, model)
+            "Custom" -> CustomProvider(baseUrl ?: "", apiKey ?: "", model ?: "gpt-4o-mini")
             else -> CustomProvider(baseUrl, apiKey, model)
         }
     }
