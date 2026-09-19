@@ -1,161 +1,202 @@
 package com.openjarvis.mcp
 
-import android.content.Context
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
-import com.openjarvis.llm.HttpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.UUID
+import java.util.concurrent.TimeUnit
 
-class MCPManager(private val context: Context) {
-    
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+class MCPClient(
+    val server: MCPServer
+) {
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
         .build()
-    
-    private val prefs = EncryptedSharedPreferences.create(
-        context,
-        "mcp_servers_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
-    
-    private val clients = mutableMapOf<String, MCPClient>()
-    
-    val serverTemplates = listOf(
-        MCPServerTemplate("Home Assistant", "http://homeassistant.local:8123/api/mcp", true),
-        MCPServerTemplate("Notion", "https://api.notion.com/v1/mcp", false),
-        MCPServerTemplate("GitHub", "https://api.github.com/mcp", false),
-        MCPServerTemplate("Gmail", "https://gmail.googleapis.com/mcp", false),
-        MCPServerTemplate("Spotify", "https://api.spotify.com/mcp", false)
-    )
-    
-    suspend fun addServer(server: MCPServer) = withContext(Dispatchers.IO) {
-        val id = server.id.ifBlank { UUID.randomUUID().toString() }
-        val newServer = server.copy(id = id)
-        
-        val servers = getServers().toMutableList()
-        servers.removeAll { it.id == id }
-        servers.add(newServer)
-        
-        saveServers(servers)
-        
-        val client = MCPClient(newServer)
-        clients[id] = client
-        
-        newServer
-    }
-    
-    suspend fun removeServer(id: String) = withContext(Dispatchers.IO) {
-        clients[id]?.disconnect()
-        clients.remove(id)
-        
-        val servers = getServers().toMutableList()
-        servers.removeAll { it.id == id }
-        saveServers(servers)
-    }
-    
-    suspend fun toggleServer(id: String, enabled: Boolean) = withContext(Dispatchers.IO) {
-        val servers = getServers().toMutableList()
-        val index = servers.indexOfFirst { it.id == id }
-        if (index >= 0) {
-            servers[index] = servers[index].copy(enabled = enabled)
-            saveServers(servers)
-            
-            if (!enabled) {
-                clients[id]?.disconnect()
-            }
-        }
-    }
-    
-    fun getServers(): List<MCPServer> {
-        val json = prefs.getString("servers", "[]") ?: return emptyList()
-        return try {
-            val array = JSONArray(json)
-            (0 until array.length()).map { i ->
-                val obj = array.getJSONObject(i)
-                MCPServer(
-                    id = obj.getString("id"),
-                    name = obj.getString("name"),
-                    url = obj.getString("url"),
-                    apiKey = obj.optString("apiKey", null),
-                    enabled = obj.optBoolean("enabled", true)
-                )
+
+    private var isConnected = false
+    private var availableTools = emptyList<MCPTool>()
+
+    private fun createRequestBody(json: String) =
+        json.toRequestBody("application/json".toMediaType())
+
+    suspend fun connect(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val requestBody = JSONObject().apply {
+                put("jsonrpc", "2.0")
+                put("id", 1)
+                put("method", "initialize")
+                put("params", JSONObject().apply {
+                    put("protocolVersion", "2024-11-05")
+                    put("capabilities", JSONObject())
+                    put("clientInfo", JSONObject().apply {
+                        put("name", "open-jarvis")
+                        put("version", "1.0.0")
+                    })
+                })
+            }.toString()
+
+            val request = Request.Builder()
+                .url(server.url)
+                .post(createRequestBody(requestBody))
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return@withContext false
+                }
+
+                val body = response.body?.string()
+                    ?: return@withContext false
+
+                val json = JSONObject(body)
+
+                if (json.has("error")) {
+                    return@withContext false
+                }
+
+                isConnected = true
+                true
             }
         } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun listTools(): List<MCPTool> = withContext(Dispatchers.IO) {
+        if (!isConnected) {
+            disconnect()
+            return@withContext emptyList()
+        }
+
+        try {
+            val requestBody = JSONObject().apply {
+                put("jsonrpc", "2.0")
+                put("id", 2)
+                put("method", "tools/list")
+            }.toString()
+
+            val request = Request.Builder()
+                .url(server.url)
+                .post(createRequestBody(requestBody))
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string()
+                    ?: return@withContext emptyList()
+
+                val json = JSONObject(body)
+
+                val result = json.optJSONObject("result")
+                val toolsArray = result?.optJSONArray("tools")
+                    ?: JSONArray()
+
+                availableTools = (0 until toolsArray.length()).map { i ->
+                    val tool = toolsArray.getJSONObject(i)
+
+                    MCPTool(
+                        name = tool.optString("name", ""),
+                        description = tool.optString("description", ""),
+                        inputSchema = tool.optJSONObject("inputSchema")
+                    )
+                }
+
+                availableTools
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
             emptyList()
         }
     }
-    
-    private fun saveServers(servers: List<MCPServer>) {
-        val array = JSONArray()
-        servers.forEach { server ->
-            array.put(JSONObject().apply {
-                put("id", server.id)
-                put("name", server.name)
-                put("url", server.url)
-                put("apiKey", server.apiKey)
-                put("enabled", server.enabled)
-            })
+
+    suspend fun callTool(
+        toolName: String,
+        arguments: JSONObject
+    ): String = withContext(Dispatchers.IO) {
+
+        if (!isConnected) {
+            disconnect()
+            return@withContext "Error: Not connected"
         }
-        prefs.edit().putString("servers", array.toString()).apply()
-    }
-    
-    suspend fun getAllTools(): Map<String, List<MCPTool>> = withContext(Dispatchers.IO) {
-        val result = mutableMapOf<String, List<MCPTool>>()
-        
-        for (server in getServers()) {
-            if (!server.enabled) continue
-            
-            val client = clients.getOrPut(server.id) { MCPClient(server) }
-            
-            if (client.connect()) {
-                val tools = client.listTools()
-                result[server.id] = tools
+
+        try {
+            val requestBody = JSONObject().apply {
+                put("jsonrpc", "2.0")
+                put("id", 3)
+                put("method", "tools/call")
+                put("params", JSONObject().apply {
+                    put("name", toolName)
+                    put("arguments", arguments)
+                })
+            }.toString()
+
+            val request = Request.Builder()
+                .url(server.url)
+                .post(createRequestBody(requestBody))
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string()
+                    ?: return@withContext "Error: Empty response"
+
+                val json = JSONObject(body)
+
+                if (json.has("error")) {
+                    return@withContext "Error: ${
+                        json.getJSONObject("error")
+                            .optString("message", "Unknown MCP error")
+                    }"
+                }
+
+                val result = json.optJSONObject("result")
+
+                val content = result?.optJSONArray("content")
+
+                if (content != null && content.length() > 0) {
+                    val first = content.optJSONObject(0)
+
+                    first?.optString("text")
+                        ?: first?.optString("content")
+                        ?: "Tool executed"
+                } else {
+                    "Tool executed"
+                }
             }
+        } catch (e: Exception) {
+            "Error: ${e.message ?: "Unknown error"}"
         }
-        
-        result
     }
-    
-    suspend fun callTool(serverId: String, toolName: String, args: JSONObject): String {
-        val client = clients[serverId] ?: return "Server not found"
-        return client.callTool(toolName, args)
+
+    fun disconnect() {
+        isConnected = false
+        availableTools = emptyList()
     }
-    
-    suspend fun testConnection(server: MCPServer): Result<Int> = runCatching {
-        val client = MCPClient(server)
-        if (!client.connect()) {
-            throw Exception("Connection failed")
-        }
-        val tools = client.listTools()
-        client.disconnect()
-        tools.size
+
+    fun isConnected(): Boolean = isConnected
+
+    fun getToolCount(): Int = availableTools.size
+
+    companion object {
+        const val HTTP = "http"
+        const val SSE = "sse"
     }
-    
-    fun buildMCPToolsPrompt(toolsMap: Map<String, List<MCPTool>>): String {
-        if (toolsMap.isEmpty()) return ""
-        
-        val sb = StringBuilder()
-        sb.appendLine("MCP TOOLS AVAILABLE:")
-        
-        for ((serverId, tools) in toolsMap) {
-            sb.appendLine("  [$serverId]:")
-            for (tool in tools) {
-                sb.appendLine("    - ${tool.name}: ${tool.description}")
-            }
-        }
-        
-        return sb.toString()
-    }
-    
-    data class MCPServerTemplate(
-        val name: String,
-        val defaultUrl: String,
-        val requiresApiKey: Boolean
-    )
 }
+
+data class MCPServer(
+    val id: String,
+    val name: String,
+    val url: String,
+    val apiKey: String? = null,
+    val enabled: Boolean = true
+)
+
+data class MCPTool(
+    val name: String,
+    val description: String,
+    val inputSchema: JSONObject? = null
+)
