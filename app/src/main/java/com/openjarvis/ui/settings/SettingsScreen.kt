@@ -10,6 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -548,7 +550,7 @@ fun FloatingLabelTextField(
                     color = VoidColor.TextSecondary
                 ),
                 modifier = Modifier.graphicsLayer {
-                    translationY = labelOffset.dp.toPx()
+                    translationY = with(LocalDensity.current) { labelOffset.dp.toPx() }
                     scaleX = labelScale
                     scaleY = labelScale
                 }
