@@ -193,6 +193,8 @@ fun executeTask(cleanCommand: String) {
         }
     }
 
+    }
+
     suspend fun testConnection(): Result<Long> {
         return universalAdapter.testConnection()
     }
